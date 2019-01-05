@@ -3,28 +3,22 @@ const fs = require("fs")
 const path = require("path")
 
 const {
-  flatten,
-  defaultTo,
-  view,
-  find,
-  map,
-  split,
-  lensPath,
-  uniq,
   chain,
-  eqBy,
-  pluck,
   compose,
-  prop
+  defaultTo,
+  equals,
+  eqBy,
+  find,
+  flatten,
+  lensPath,
+  map,
+  prop,
+  split,
+  uniq,
+  view,
+  whereEq
 } = require("ramda")
-const {
-  transform,
-  modifyOp,
-  modify,
-  elems,
-  get,
-  set
-} = require("partial.lenses")
+const { elems, get, modify, set } = require("partial.lenses")
 
 const normalize = provider =>
   ["UNITIL", "NSTAR", "NANTUCKET", "WMECO", "MASSACHUSETTS"].find(normalized =>
@@ -68,127 +62,27 @@ uniq(
   )
 ).map(normalize)
 
-// This almost works, but we don't get the surrounding object back,
-// just the nested "geometries" array :(
-// (Also, its already a bit of a mess)
-geoData.objects.towns.geometries.map(x => ({
-  ...x,
-  properties: {
-    ...x.properties,
-    rate: x.properties.ELEC_LABEL.split(", ").map(label => {
-      const match = block1Data.find(
-        ({ provider }) => normalize(provider) === normalize(label)
-      )
-      return match ? match.rate : 0
-    })
+const geometries = ["objects", "towns", "geometries", elems]
+const ELEC_LABEL = ["properties", "ELEC_LABEL"]
+
+// lookupBy :: Eq c => ([a] -> [c], [b] -> [c]) -> [a] -> [b] -> a
+const lookupBy = compose(
+  find,
+  whereEq
+)
+
+const xs = {
+  onion: 1
+}
+const ys = [
+  {
+    onion: 1
   }
-}))
+]
 
-// Progress, but this is broken
-// (Need to fix `modifyOp`)
-transform([
-  ["objects", "towns", "geometries"],
-  elems,
-  modifyOp(o => ({
-    ...o,
-    properties: {
-      ...o.properties,
-      rate: o.properties.ELEC_LABEL.split(", ").map(label => {
-        const match = block1Data.find(
-          ({ provider }) => normalize(provider) === normalize(label)
-        )
-        return match ? match.rate : 0
-      })
-    }
-  }))
-])(geoData).objects.towns.geometries[0]
+lookupBy(xs)(ys) //?
 
-// A bit better
-modify([["objects", "towns", "geometries"], elems], o => ({
-  ...o,
-  properties: {
-    ...o.properties,
-    rate: o.properties.ELEC_LABEL.split(", ").map(label => {
-      const match = block1Data.find(
-        ({ provider }) => normalize(provider) === normalize(label)
-      )
-      return match ? match.rate : 0
-    })
-  }
-}))(geoData).objects.towns.geometries[0]
-
-// Pointfree using `chain`
-modify(
-  ["objects", "towns", "geometries", elems],
-  chain(
-    set(["properties", "rate"]),
-    compose(
-      map(label => {
-        const match = block1Data.find(
-          ({ provider }) => normalize(provider) === normalize(label)
-        )
-        return match ? match.rate : 0
-      }),
-      split(", "),
-      view(lensPath(["properties", "ELEC_LABEL"]))
-    )
-  )
-)(geoData).objects.towns.geometries[0]
-
-modify(
-  ["objects", "towns", "geometries", elems],
-  chain(
-    set(["properties", "rate"]),
-    compose(
-      map(label => {
-        const match = block1Data.find(({ provider }) =>
-          eqBy(normalize, label, provider)
-        )
-        return match ? match.rate : 0
-      }),
-      split(", "),
-      view(lensPath(["properties", "ELEC_LABEL"]))
-    )
-  )
-)(geoData).objects.towns.geometries[0]
-
-modify(
-  ["objects", "towns", "geometries", elems],
-  chain(
-    set(["properties", "SMART"]),
-    compose(
-      map(label =>
-        defaultTo(0)(
-          prop("rate")(
-            block1Data.find(({ provider }) => eqBy(normalize, label, provider))
-          )
-        )
-      ),
-      split(", "),
-      view(lensPath(["properties", "ELEC_LABEL"]))
-    )
-  )
-)(geoData).objects.towns.geometries[25]
-
-modify(
-  ["objects", "towns", "geometries", elems],
-  chain(
-    set(["properties", "SMART"]),
-    compose(
-      map(label =>
-        compose(
-          defaultTo(0),
-          prop("rate"),
-          find(({ provider }) => eqBy(normalize, label, provider))
-        )(block1Data)
-      ),
-      split(", "),
-      view(lensPath(["properties", "ELEC_LABEL"]))
-    )
-  )
-)(geoData).objects.towns.geometries[25]
-
-modify(
+const joinSMARTData = modify(
   ["objects", "towns", "geometries", elems],
   chain(
     set(["properties", "SMART"]),
@@ -206,12 +100,9 @@ modify(
         )(block1Data)
       ),
       split(", "),
-      view(lensPath(["properties", "ELEC_LABEL"]))
+      get(["properties", "ELEC_LABEL"])
     )
   )
-)(geoData).objects.towns.geometries[25] //?
+)
 
-const trace = msg => x => {
-  console.log(msg, x)
-  return x
-}
+joinSMARTData(geoData).objects.towns.geometries[58].properties.SMART //?
