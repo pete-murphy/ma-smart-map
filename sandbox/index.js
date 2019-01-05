@@ -2,9 +2,24 @@ const d3 = require("d3")
 const fs = require("fs")
 const path = require("path")
 
-const R = require("ramda")
-// const L = require("partial.lenses")
-const { transform, modifyOp, elems } = require("partial.lenses")
+const {
+  flatten,
+  view,
+  map,
+  split,
+  lensPath,
+  uniq,
+  chain,
+  compose
+} = require("ramda")
+const {
+  transform,
+  modifyOp,
+  modify,
+  elems,
+  get,
+  set
+} = require("partial.lenses")
 
 const normalize = provider =>
   ["UNITIL", "NSTAR", "NANTUCKET", "WMECO", "MASSACHUSETTS"].find(normalized =>
@@ -27,26 +42,26 @@ const block1Data = d3
   )
 
 // Inspecting Block 1 data
-block1Data //?
+block1Data
 
 // Checking if there is a difference between "ELEC" and "ELEC_LABEL" values.
 // (And indeed there is; turns out we only need care about what's in "ELEC_LABEL".)
 geoData.objects.towns.geometries
   // .filter(({ properties: p }) => !p.ELEC_LABEL.includes("Municipal"))
-  .filter(({ properties: p }) => p.ELEC !== p.ELEC_LABEL) //?
+  .filter(({ properties: p }) => p.ELEC !== p.ELEC_LABEL)
 
 // Inspecting town data
-geoData.objects.towns.geometries //?
+geoData.objects.towns.geometries
 
 // Making sure the normalized provider names of both data sets match up
-R.uniq(block1Data.map(({ provider }) => provider).map(normalize)) //?
-R.uniq(
-  R.flatten(
+uniq(block1Data.map(({ provider }) => provider).map(normalize))
+uniq(
+  flatten(
     geoData.objects.towns.geometries.map(
       ({ properties: { ELEC_LABEL: label } }) => label.split(", ")
     )
   )
-).map(normalize) //?
+).map(normalize)
 
 // This almost works, but we don't get the surrounding object back,
 // just the nested "geometries" array :(
@@ -62,20 +77,55 @@ geoData.objects.towns.geometries.map(x => ({
       return match ? match.rate : 0
     })
   }
-})) //?
+}))
 
 // Progress, but this is broken
 // (Need to fix `modifyOp`)
 transform([
   ["objects", "towns", "geometries"],
   elems,
-  modifyOp(({ properties }) => ({
-    ...properties,
-    rate: properties.ELEC_LABEL.split(", ").map(label => {
+  modifyOp(o => ({
+    ...o,
+    properties: {
+      ...o.properties,
+      rate: o.properties.ELEC_LABEL.split(", ").map(label => {
+        const match = block1Data.find(
+          ({ provider }) => normalize(provider) === normalize(label)
+        )
+        return match ? match.rate : 0
+      })
+    }
+  }))
+])(geoData).objects.towns.geometries[0]
+
+// A bit better
+modify([["objects", "towns", "geometries"], elems], o => ({
+  ...o,
+  properties: {
+    ...o.properties,
+    rate: o.properties.ELEC_LABEL.split(", ").map(label => {
       const match = block1Data.find(
         ({ provider }) => normalize(provider) === normalize(label)
       )
       return match ? match.rate : 0
     })
-  }))
-])(geoData).objects.towns.geometries[0] //?
+  }
+}))(geoData).objects.towns.geometries[0]
+
+// Pointfree using `chain`
+modify(
+  ["objects", "towns", "geometries", elems],
+  chain(
+    set(["properties", "rate"]),
+    compose(
+      map(label => {
+        const match = block1Data.find(
+          ({ provider }) => normalize(provider) === normalize(label)
+        )
+        return match ? match.rate : 0
+      }),
+      split(", "),
+      view(lensPath(["properties", "ELEC_LABEL"]))
+    )
+  )
+)(geoData).objects.towns.geometries[0]
