@@ -7,6 +7,7 @@
     "d3": "^5.7.0",
     "d3-geo": "^1.11.3",
     "d3-geo-projection": "^2.5.0",
+    "partial.lenses": "^14.17.0",
     "ramda": "^0.26.1",
     "topojson": "^3.0.2"
   },

@@ -12,7 +12,7 @@ If we want to get really fancy, we can add a shaded relief bitmap image as a bas
 
 - https://bl.ocks.org/ThomasThoren/550b2ce8b1e2470e75b2
 
-The [last time](https://github.com/ptrfrncsmrph/mass-map) I tried this, the resulting image revealed an issue with the SRTM data, so I decided if I were to attempt it again, I'd use the more granular dataset that is available for US only. I also figured I could use Python3 Another headache I ran into was conflicting Python environments and GDAL distributions, so maybe it would be nice to have the whole environment in a Docker container to have a reliably reproducible process. This will require learning Docker. All in all, this sounds like it could be a yak-shaving mission.
+The [last time](https://github.com/ptrfrncsmrph/mass-map) I tried this, the resulting image revealed an issue with the SRTM data, so I decided if I were to attempt it again, I'd use the more granular dataset that is available for US only. I also figured I could use Python3 to read the zipped DEM files directly. Another headache I ran into was conflicting Python environments and GDAL distributions, so maybe it would be nice to have the whole environment in a Docker container to have a reliably reproducible process. This will require learning Docker. All in all, this sounds like it could be a yak-shaving mission.
 
 - 30m tiles (http://dwtkns.com/srtm30m/)
 
