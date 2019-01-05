@@ -4,13 +4,18 @@ const path = require("path")
 
 const {
   flatten,
+  defaultTo,
   view,
+  find,
   map,
   split,
   lensPath,
   uniq,
   chain,
-  compose
+  eqBy,
+  pluck,
+  compose,
+  prop
 } = require("ramda")
 const {
   transform,
@@ -129,3 +134,61 @@ modify(
     )
   )
 )(geoData).objects.towns.geometries[0]
+
+modify(
+  ["objects", "towns", "geometries", elems],
+  chain(
+    set(["properties", "rate"]),
+    compose(
+      map(label => {
+        const match = block1Data.find(({ provider }) =>
+          eqBy(normalize, label, provider)
+        )
+        return match ? match.rate : 0
+      }),
+      split(", "),
+      view(lensPath(["properties", "ELEC_LABEL"]))
+    )
+  )
+)(geoData).objects.towns.geometries[0] //?
+
+modify(
+  ["objects", "towns", "geometries", elems],
+  chain(
+    set(["properties", "SMART"]),
+    compose(
+      map(label =>
+        defaultTo(0)(
+          prop("rate")(
+            block1Data.find(({ provider }) => eqBy(normalize, label, provider))
+          )
+        )
+      ),
+      split(", "),
+      view(lensPath(["properties", "ELEC_LABEL"]))
+    )
+  )
+)(geoData).objects.towns.geometries[25] //?
+
+modify(
+  ["objects", "towns", "geometries", elems],
+  chain(
+    set(["properties", "SMART"]),
+    compose(
+      map(label =>
+        compose(
+          defaultTo(0),
+          prop("rate"),
+          find(({ provider }) => eqBy(normalize, label, provider))
+        )(block1Data)
+      ),
+      split(", "),
+      view(lensPath(["properties", "ELEC_LABEL"]))
+    )
+  )
+)(geoData).objects.towns.geometries[25] //?
+
+const trace = msg => x => {
+  console.log(msg, x)
+  return x
+}
