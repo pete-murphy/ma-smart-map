@@ -1,7 +1,9 @@
 const d3 = require("d3")
 const fs = require("fs")
 const path = require("path")
-const { flatten, sum, uniq } = require("ramda")
+
+const R = require("ramda")
+const L = require("partial.lenses")
 
 const normalize = provider =>
   ["UNITIL", "NSTAR", "NANTUCKET", "WMECO", "MASSACHUSETTS"].find(normalized =>
@@ -38,9 +40,9 @@ geoData.objects.towns.geometries
 geoData.objects.towns.geometries //?
 
 // Making sure the normalized provider names of both data sets match up
-uniq(block1Data.map(({ provider }) => provider).map(normalize)) //?
-uniq(
-  flatten(
+R.uniq(block1Data.map(({ provider }) => provider).map(normalize)) //?
+R.uniq(
+  R.flatten(
     geoData.objects.towns.geometries.map(
       ({ properties: { ELEC_LABEL: label } }) => label.split(", ")
     )
@@ -62,22 +64,3 @@ geoData.objects.towns.geometries.map(x => ({
     })
   }
 })) //?
-
-// You could do something like this?
-// But that's not respecting immutability
-
-geoData.objects.towns.geometries.forEach(
-  (x, i) =>
-    (geoData.objects.towns.geometries[i] = {
-      ...x,
-      properties: {
-        ...x.properties,
-        rate: x.properties.ELEC_LABEL.split(", ").map(label => {
-          const match = block1Data.find(
-            ({ provider }) => normalize(provider) === normalize(label)
-          )
-          return match ? match.rate : 0
-        })
-      }
-    })
-) //?
