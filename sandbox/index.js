@@ -66,35 +66,39 @@ const geometries = ["objects", "towns", "geometries", elems]
 const ELEC_LABEL = ["properties", "ELEC_LABEL"]
 const splitByLabel = split(", ")
 
-const findWhereEqBy = st =>
+const findWhereEqBy = optic =>
   map(
     compose(
       find,
       whereEq
     ),
-    prop(st)
+    optic
   )
 
-const ex = { onions: { tomatoes: 1 } }
-const bx = [{ tomatoes: 1, goo: 2 }]
+const ex = { properties: { ELEC_LABEL: { foo: 1 } } }
+const bx = [{ foo: 1, goo: 2 }]
 
-findWhereEqBy("onions")(ex)(bx) //?
+findWhereEqBy(get(ELEC_LABEL))(ex)(bx) //?
+
+// mapToRate :: BlockInfo -> [Util] ->  [Float]
+const mapToRate = b =>
+  map(label =>
+    compose(
+      defaultTo(0),
+      prop("rate"),
+      find(
+        compose(
+          eqBy(normalize, label),
+          prop("provider")
+        )
+      )
+    )(b)
+  )
 
 // insertSMARTRate :: Geometry -> BlockInfo -> Geometry
 const insertSMARTRate = g => b =>
   compose(
-    map(label =>
-      compose(
-        defaultTo(0),
-        prop("rate"),
-        find(
-          compose(
-            eqBy(normalize, label),
-            prop("provider")
-          )
-        )
-      )(b)
-    ),
+    mapToRate(b),
     split(", "),
     get(["properties", "ELEC_LABEL"])
   )(g)
