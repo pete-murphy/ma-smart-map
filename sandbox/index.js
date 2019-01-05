@@ -81,7 +81,7 @@ const bx = [{ foo: 1, goo: 2 }]
 findWhereEqBy(get(ELEC_LABEL))(ex)(bx) //?
 
 // mapToRate :: BlockInfo -> [Util] ->  [Float]
-const mapToRate = b =>
+const mapToRate = blockInfo =>
   map(label =>
     compose(
       defaultTo(0),
@@ -92,18 +92,18 @@ const mapToRate = b =>
           prop("provider")
         )
       )
-    )(b)
+    )(blockInfo)
   )
 
 // insertSMARTRate :: Geometry -> BlockInfo -> Geometry
-const insertSMARTRate = g => b =>
+const insertSMARTRate = b =>
   compose(
     mapToRate(b),
-    split(", "),
-    get(["properties", "ELEC_LABEL"])
-  )(g)
+    splitByLabel,
+    get(ELEC_LABEL)
+  )
 
-insertSMARTRate({ properties: { ELEC_LABEL: "UNITIL" } })(block1Data) //?
+insertSMARTRate(block1Data)({ properties: { ELEC_LABEL: "UNITIL" } }) //?
 
 // findWhereEqBy(compose(normalize, get(["properties", "ELEC_LABEL"])))({ properties: { ELEC_LABEL: "UNITIL" } })
 
