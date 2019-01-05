@@ -1,0 +1,28 @@
+{
+  "name": "mass-util-map-v2",
+  "version": "1.0.0",
+  "description": "We have at least two sources of data that we will use in generating a choropleth map of Massachusetts that visualizes the difference in SMART incentive values throughout the commonwealth.",
+  "main": "index.js",
+  "dependencies": {
+    "d3": "^5.7.0",
+    "d3-geo": "^1.11.3",
+    "d3-geo-projection": "^2.5.0",
+    "ramda": "^0.26.1",
+    "topojson": "^3.0.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ptrfrncsmrph/ma-smart-map.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ptrfrncsmrph/ma-smart-map/issues"
+  },
+  "homepage": "https://github.com/ptrfrncsmrph/ma-smart-map#readme"
+}
