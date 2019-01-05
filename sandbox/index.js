@@ -64,28 +64,55 @@ uniq(
 
 const geometries = ["objects", "towns", "geometries", elems]
 const ELEC_LABEL = ["properties", "ELEC_LABEL"]
+const splitByLabel = split(", ")
 
-// lookupBy :: Eq c => ([a] -> [c], [b] -> [c]) -> [a] -> [b] -> a
-const lookupBy = compose(
-  find,
-  whereEq
-)
+const findWhereEqBy = st =>
+  map(
+    compose(
+      find,
+      whereEq
+    ),
+    prop(st)
+  )
 
-const xs = {
-  onion: 1
-}
-const ys = [
-  {
-    onion: 1
-  }
-]
+const ex = { onions: { tomatoes: 1 } }
+const bx = [{ tomatoes: 1, goo: 2 }]
 
-lookupBy(xs)(ys) //?
+findWhereEqBy("onions")(ex)(bx) //?
+
+// insertSMARTRate :: Geometry -> BlockInfo -> Geometry
+const insertSMARTRate = g => b =>
+  compose(
+    map(label =>
+      compose(
+        defaultTo(0),
+        prop("rate"),
+        find(
+          compose(
+            eqBy(normalize, label),
+            prop("provider")
+          )
+        )
+      )(b)
+    ),
+    split(", "),
+    get(["properties", "ELEC_LABEL"])
+  )(g)
+
+insertSMARTRate({ properties: { ELEC_LABEL: "UNITIL" } })(block1Data) //?
+
+// findWhereEqBy(compose(normalize, get(["properties", "ELEC_LABEL"])))({ properties: { ELEC_LABEL: "UNITIL" } })
 
 const joinSMARTData = modify(
   ["objects", "towns", "geometries", elems],
   chain(
     set(["properties", "SMART"]),
+    //
+    //  This part takes an object (the geometry obj)
+    //  (and it should also be parameterized by the block obj)
+    //  and returns the first object with an updated nested field
+    //  then gets the properties.ELEC_LABEL value
+    //
     compose(
       map(label =>
         compose(
@@ -102,6 +129,8 @@ const joinSMARTData = modify(
       split(", "),
       get(["properties", "ELEC_LABEL"])
     )
+
+    //
   )
 )
 
