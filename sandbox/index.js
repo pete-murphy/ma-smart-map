@@ -1,7 +1,9 @@
-const d3 = require("d3")
-const fs = require("fs")
-const path = require("path")
 
+
+const fs = require('fs')
+const path = require('path')
+
+const d3 = require('d3')
 const {
   chain,
   compose,
@@ -17,28 +19,27 @@ const {
   uniq,
   view,
   whereEq
-} = require("ramda")
-const { elems, get, modify, set } = require("partial.lenses")
+} = require('ramda')
+const { elems, get, modify, set } = require('partial.lenses')
 
 const normalize = provider =>
-  ["UNITIL", "NSTAR", "NANTUCKET", "WMECO", "MASSACHUSETTS"].find(normalized =>
-    new RegExp(normalized, "gi").test(provider)
+  ['UNITIL', 'NSTAR', 'NANTUCKET', 'WMECO', 'MASSACHUSETTS'].find(normalized =>
+    new RegExp(normalized, 'ugi').test(provider)
   ) || provider.toUpperCase()
 
-const geoData = require("./json/ma.topo")
+const geoData = require('./json/ma.topo')
+
 const block1Data = d3
   // Reading CSV data from file and parsing as JSON
-  .csvParse(fs.readFileSync(path.join(__dirname, "../csv/Block1.csv"), "utf-8"))
+  .csvParse(fs.readFile(path.join(__dirname, '../csv/Block1.csv'), 'utf-8'))
   // Only need the highest base rate rows (these are most common for residential installs)
-  .filter(({ ["Base Compensation Rate Factor"]: base }) => base === "230%")
+  .filter(({ 'Base Compensation Rate Factor': base }) => base === '230%')
   // From those rows, only need the utility provider and the rate
-  .map(
-    ({ ["Electric Distribution Company"]: provider, ["Block 1"]: rate }) => ({
-      provider,
-      // Convert to number
-      rate: +rate.slice(1)
-    })
-  )
+  .map(({ 'Electric Distribution Company': provider, 'Block 1': rate }) => ({
+    provider,
+    // Convert to number
+    rate: Number(rate.slice(1))
+  }))
 
 // Inspecting Block 1 data
 block1Data
@@ -57,16 +58,16 @@ uniq(block1Data.map(({ provider }) => provider).map(normalize))
 uniq(
   flatten(
     geoData.objects.towns.geometries.map(
-      ({ properties: { ELEC_LABEL: label } }) => label.split(", ")
+      ({ properties: { ELEC_LABEL: label } }) => label.split(', ')
     )
   )
 ).map(normalize)
 
-// geometries, SMART, ELEC_LABEL :: LensPath
-const geometries = ["objects", "towns", "geometries", elems]
-const SMART = ["properties", "SMART"]
-const ELEC_LABEL = ["properties", "ELEC_LABEL"]
-const splitByLabel = split(", ")
+// Geometries, SMART, ELEC_LABEL :: LensPath
+const geometries = ['objects', 'towns', 'geometries', elems]
+const SMART = ['properties', 'SMART']
+const ELEC_LABEL = ['properties', 'ELEC_LABEL']
+const splitByLabel = split(', ')
 
 const findWhereEqBy = optic =>
   map(
@@ -80,24 +81,24 @@ const findWhereEqBy = optic =>
 const ex = { properties: { ELEC_LABEL: { foo: 1 } } }
 const bx = [{ foo: 1, goo: 2 }]
 
-findWhereEqBy(get(ELEC_LABEL))(ex)(bx) //?
+findWhereEqBy(get(ELEC_LABEL))(ex)(bx)
 
-// mapToRate :: BlockInfo -> [Util] -> [Float]
+// MapToRate :: BlockInfo -> [Util] -> [Float]
 const mapToRate = blockInfo =>
   map(label =>
     compose(
       defaultTo(0),
-      prop("rate"),
+      prop('rate'),
       find(
         compose(
           eqBy(normalize, label),
-          prop("provider")
+          prop('provider')
         )
       )
     )(blockInfo)
   )
 
-// insertSMARTRate :: BlockInfo -> Geometry -> Geometry
+// InsertSMARTRate :: BlockInfo -> Geometry -> Geometry
 const insertSMARTRate = blockInfo =>
   compose(
     mapToRate(blockInfo),
@@ -108,4 +109,4 @@ const insertSMARTRate = blockInfo =>
 const joinData = blockInfo =>
   modify(geometries, chain(set(SMART), insertSMARTRate(blockInfo)))
 
-joinData(block1Data)(geoData).objects.towns.geometries[58].properties.SMART //?
+joinData(block1Data)(geoData).objects.towns.geometries[58].properties.SMART // ?
