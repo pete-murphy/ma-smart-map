@@ -62,7 +62,9 @@ uniq(
   )
 ).map(normalize)
 
+// geometries, SMART, ELEC_LABEL :: LensPath
 const geometries = ["objects", "towns", "geometries", elems]
+const SMART = ["properties", "SMART"]
 const ELEC_LABEL = ["properties", "ELEC_LABEL"]
 const splitByLabel = split(", ")
 
@@ -80,7 +82,7 @@ const bx = [{ foo: 1, goo: 2 }]
 
 findWhereEqBy(get(ELEC_LABEL))(ex)(bx) //?
 
-// mapToRate :: BlockInfo -> [Util] ->  [Float]
+// mapToRate :: BlockInfo -> [Util] -> [Float]
 const mapToRate = blockInfo =>
   map(label =>
     compose(
@@ -95,47 +97,15 @@ const mapToRate = blockInfo =>
     )(blockInfo)
   )
 
-// insertSMARTRate :: Geometry -> BlockInfo -> Geometry
-const insertSMARTRate = b =>
+// insertSMARTRate :: BlockInfo -> Geometry -> Geometry
+const insertSMARTRate = blockInfo =>
   compose(
-    mapToRate(b),
+    mapToRate(blockInfo),
     splitByLabel,
     get(ELEC_LABEL)
   )
 
-insertSMARTRate(block1Data)({ properties: { ELEC_LABEL: "UNITIL" } }) //?
+const joinData = blockInfo =>
+  modify(geometries, chain(set(SMART), insertSMARTRate(blockInfo)))
 
-// findWhereEqBy(compose(normalize, get(["properties", "ELEC_LABEL"])))({ properties: { ELEC_LABEL: "UNITIL" } })
-
-const joinSMARTData = modify(
-  ["objects", "towns", "geometries", elems],
-  chain(
-    set(["properties", "SMART"]),
-    //
-    //  This part takes an object (the geometry obj)
-    //  (and it should also be parameterized by the block obj)
-    //  and returns the first object with an updated nested field
-    //  then gets the properties.ELEC_LABEL value
-    //
-    compose(
-      map(label =>
-        compose(
-          defaultTo(0),
-          prop("rate"),
-          find(
-            compose(
-              eqBy(normalize, label),
-              prop("provider")
-            )
-          )
-        )(block1Data)
-      ),
-      split(", "),
-      get(["properties", "ELEC_LABEL"])
-    )
-
-    //
-  )
-)
-
-joinSMARTData(geoData).objects.towns.geometries[58].properties.SMART //?
+joinData(block1Data)(geoData).objects.towns.geometries[58].properties.SMART //?
