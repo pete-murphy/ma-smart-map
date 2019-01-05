@@ -3,12 +3,13 @@ const fs = require("fs")
 const path = require("path")
 
 const R = require("ramda")
-const L = require("partial.lenses")
+// const L = require("partial.lenses")
+const { transform, modifyOp, elems } = require("partial.lenses")
 
 const normalize = provider =>
   ["UNITIL", "NSTAR", "NANTUCKET", "WMECO", "MASSACHUSETTS"].find(normalized =>
     new RegExp(normalized, "gi").test(provider)
-  ) || provider
+  ) || provider.toUpperCase()
 
 const geoData = require("./json/ma.topo")
 const block1Data = d3
@@ -19,9 +20,7 @@ const block1Data = d3
   // From those rows, only need the utility provider and the rate
   .map(
     ({ ["Electric Distribution Company"]: provider, ["Block 1"]: rate }) => ({
-      // Trimming the footnote markers off
       provider,
-      // : normalize(provider),
       // Convert to number
       rate: +rate.slice(1)
     })
@@ -64,3 +63,19 @@ geoData.objects.towns.geometries.map(x => ({
     })
   }
 })) //?
+
+// Progress, but this is broken
+// (Need to fix `modifyOp`)
+transform([
+  ["objects", "towns", "geometries"],
+  elems,
+  modifyOp(({ properties }) => ({
+    ...properties,
+    rate: properties.ELEC_LABEL.split(", ").map(label => {
+      const match = block1Data.find(
+        ({ provider }) => normalize(provider) === normalize(label)
+      )
+      return match ? match.rate : 0
+    })
+  }))
+])(geoData).objects.towns.geometries[0] //?
