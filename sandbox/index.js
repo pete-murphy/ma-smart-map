@@ -150,7 +150,7 @@ modify(
       view(lensPath(["properties", "ELEC_LABEL"]))
     )
   )
-)(geoData).objects.towns.geometries[0] //?
+)(geoData).objects.towns.geometries[0]
 
 modify(
   ["objects", "towns", "geometries", elems],
@@ -168,7 +168,7 @@ modify(
       view(lensPath(["properties", "ELEC_LABEL"]))
     )
   )
-)(geoData).objects.towns.geometries[25] //?
+)(geoData).objects.towns.geometries[25]
 
 modify(
   ["objects", "towns", "geometries", elems],
@@ -180,6 +180,29 @@ modify(
           defaultTo(0),
           prop("rate"),
           find(({ provider }) => eqBy(normalize, label, provider))
+        )(block1Data)
+      ),
+      split(", "),
+      view(lensPath(["properties", "ELEC_LABEL"]))
+    )
+  )
+)(geoData).objects.towns.geometries[25]
+
+modify(
+  ["objects", "towns", "geometries", elems],
+  chain(
+    set(["properties", "SMART"]),
+    compose(
+      map(label =>
+        compose(
+          defaultTo(0),
+          prop("rate"),
+          find(
+            compose(
+              eqBy(normalize, label),
+              prop("provider")
+            )
+          )
         )(block1Data)
       ),
       split(", "),
