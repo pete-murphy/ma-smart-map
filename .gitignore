@@ -65,6 +65,8 @@ shp/
 *.sandbox.*
 # sandbox/
 
+trash/
+
 .psci_modules/
 .psc-package/
 .pulp-cache/
