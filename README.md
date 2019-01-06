@@ -35,6 +35,15 @@ I was hoping to have this all in a Makefile, but there are a number of things th
 $ mkdir -p shp
 $ curl http://maps-massgis.opendata.arcgis.com/datasets/1710ebf6cf614b5fa97c0a269cece375_0.zip -o shp/ma-towns-util.zip
 $ unzip $_ -d shp
+$ mkdir -p json
 $ ogr2ogr -f GeoJSON json/ma-towns-util.json shp/Electric_Utility_Providers_in_Massachusetts.shp
 ```
-2. Now for the non-automatable stuff: for the _SMART_ rate data, there's no easy way of getting it; I just manually downloaded the Excel file, opened it in Numbers and exported a CSV of the section I cared about. I was then parsing that CSV using `d3.csvParse` and then scraping the relevant bits with vanilla JS `map` and `filter`. So I could write that bit out as a Node script(?) Not too sure which way to proceed with that, but if I can do it in the command line I'd prefer that.
+2. Use [`geoproject`](https://github.com/d3/d3-geo-projection/blob/master/README.md#geoproject) (from `d3-geo-projection`) to project our map. According to [`d3-state-place`](https://github.com/veltman/d3-stateplane#nad83--massachusetts-mainland-epsg26986) the optimal projection for Massachusetts mainland is `EPSG:26986`. I had some dependency issues trying to call this; `geoproject` is expected to be installed globally, and it required `resolve` to be installed globally as well. I don't know.
+```
+$ geoproject "d3.geoConicConformal() \
+  .parallels([41 + 43 / 60, 42 + 41 / 60]) \
+  .rotate([71 + 30 / 60, 0]).fitSize([960, 960], d)" \
+  < json/ma-towns-util.json > json/ma-albers.json
+```
+
+3. Now for the non-automatable stuff: for the _SMART_ rate data, there's no easy way of getting it; I just manually downloaded the Excel file, opened it in Numbers and exported a CSV of the section I cared about. I was then parsing that CSV using `d3.csvParse` and then scraping the relevant bits with vanilla JS `map` and `filter`. So I could write that bit out as a Node script(?) Not too sure which way to proceed with that, but if I can do it in the command line I'd prefer that.
