@@ -38,7 +38,7 @@ $ unzip $_ -d shp
 $ mkdir -p json
 $ ogr2ogr -f GeoJSON json/ma-towns-util.json shp/Electric_Utility_Providers_in_Massachusetts.shp
 ```
-2. Use [`geoproject`](https://github.com/d3/d3-geo-projection/blob/master/README.md#geoproject) (from `d3-geo-projection`) to project our map. According to [`d3-state-place`](https://github.com/veltman/d3-stateplane#nad83--massachusetts-mainland-epsg26986) the optimal projection for Massachusetts mainland is `EPSG:26986`. I had some dependency issues trying to call this; `geoproject` is expected to be installed globally, and it required `resolve` to be installed globally as well. I don't know.
+2. Use [`geoproject`](https://github.com/d3/d3-geo-projection/blob/master/README.md#geoproject) (from `d3-geo-projection`) to project our map. According to [`d3-stateplane`](https://github.com/veltman/d3-stateplane#nad83--massachusetts-mainland-epsg26986) the optimal projection for Massachusetts mainland is `EPSG:26986`. I had some dependency issues trying to call this; `geoproject` is expected to be installed globally, and it required `resolve` to be installed globally as well. I don't know.
 ```
 $ geoproject "d3.geoConicConformal() \
   .parallels([41 + 43 / 60, 42 + 41 / 60]) \
