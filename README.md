@@ -28,11 +28,13 @@ These have to be downloaded manually:
 
 ## Steps for creating SVG
 
-I was hoping to make a Makefile, but there are a number of things that, as far as I can tell, can't be automated. Download the Shapefile of MA towns and utility providers from [this URL](http://maps-massgis.opendata.arcgis.com/datasets/1710ebf6cf614b5fa97c0a269cece375_0) (couldn't and convert it to GeoJSON using GDAL (I tried Mike Bostock's `shp2json` but I ended up with invalid output).
+I was hoping to have this all in a Makefile, but there are a number of things that, as far as I can tell, can't be automated. 
+
+1. Download the Shapefile of MA towns and utility providers from [this URL](http://maps-massgis.opendata.arcgis.com/datasets/1710ebf6cf614b5fa97c0a269cece375_0) and convert it to GeoJSON using GDAL (I tried Mike Bostock's `shp2json` but I ended up with invalid output).
 ```bash
 $ mkdir -p shp
 $ curl http://maps-massgis.opendata.arcgis.com/datasets/1710ebf6cf614b5fa97c0a269cece375_0.zip -o shp/ma-towns-util.zip
 $ unzip $_ -d shp
 $ ogr2ogr -f GeoJSON json/ma-towns-util.json shp/Electric_Utility_Providers_in_Massachusetts.shp
 ```
-Now for the non-automatable stuff: for the _SMART_ rate data, there's no easy way of getting it; I just manually downloaded the Excel file, opened it in Numbers and exported a CSV of the section I cared about. I was then parsing that CSV using `d3.csvParse` and then scraping the relevant bits with vanilla JS `map` and `filter`. So I could write that bit out as a Node script(?) Not too sure which way to proceed with that, but if I can do it in the command line I'd prefer that.
+2. Now for the non-automatable stuff: for the _SMART_ rate data, there's no easy way of getting it; I just manually downloaded the Excel file, opened it in Numbers and exported a CSV of the section I cared about. I was then parsing that CSV using `d3.csvParse` and then scraping the relevant bits with vanilla JS `map` and `filter`. So I could write that bit out as a Node script(?) Not too sure which way to proceed with that, but if I can do it in the command line I'd prefer that.
