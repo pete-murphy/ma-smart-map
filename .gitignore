@@ -66,5 +66,7 @@ shp/
 # sandbox/
 
 .psc-package/
+.pulp-cache/
+output/
 
 .DS_Store
