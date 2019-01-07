@@ -44,17 +44,27 @@ I was hoping to have this all in a Makefile, but there are a number of things th
   $ geoproject "d3.geoConicConformal().parallels([41 + 43 / 60, 42 + 41 / 60]).rotate([71 + 30 / 60, 0]).fitSize([960, 960], d)" \
     < json/ma-towns-util.json > json/ma-projected.json
   ```
-3. Convert to TopoJSON. _**Note** that `towns` is required (hard-coded into `insertSMARTRate` script), need to fix that._
+3. Convert to TopoJSON.
   ```bash
   $ geo2topo towns=json/ma-projected.json > json/ma-projected-topo.json
   ```
-4. Simplify. I can use `-p 1` to simplify by pixels. This is the benefit of pre-projecting the image; no need to do any guess-and-check work with simplifying by steradians. The file size is reduced from 19.4 MB to 352 KB 👍.
+4. Simplify. I can use `-p 1` to simplify by pixels. This is the benefit of pre-projecting the image; no need to do any guess-and-check work with simplifying by steradians. The file size is reduced from 19.4 MB to 352 KB, and quantizing further reduces to 176 KB 👍.
   ```bash
   $ toposimplify -p 1 -f \
     < json/ma-projected-topo.json \
     > json/ma-simple-topo.json
+  $ topoquantize 1e5 \
+    < json/ma-simple-topo.json \
+    > json/ma-quantized-topo.json
   ```
-4. Now for the non-automated stuff. For the SMART rate data, there's no easy way of getting it; I just manually downloaded the Excel file, opened it in Numbers and exported a CSV of the section I cared about. I was then parsing that CSV using `d3.csvParse` and then scraping the relevant bits with vanilla JS `map` and `filter`. **And this is the ugly bit:** the Node script. It expects the CSV first followed by the TopoJSON. Not sure how brittle this is. **To do:** re-write in Haskell.
+5. Merge by `ELEC_LABEL`. **Note** that `regions` field name must be in sync with the lens path in the `insertSMARTRate` script.
+  ```
+  $ topomerge -k "d.properties.ELEC_LABEL" regions=towns \
+    < json/ma-quantized-topo.json \
+    > json/ma-merge-topo.json
+  ```
+5. Now for the non-automated stuff. For the SMART rate data, there's no easy way of getting it; I just manually downloaded the Excel file, opened it in Numbers and exported a CSV of the section I cared about. I was then parsing that CSV using `d3.csvParse` and then scraping the relevant bits with vanilla JS `map` and `filter`. **And this is the ugly bit:** the Node script. It expects the CSV first followed by the TopoJSON. Not sure how brittle this is. **To do:** re-write in Haskell.
   ```bash
-  $ node lib/insertSMARTRate.js csv/Block1.csv json/ma-projected-topo.json
+  $ node lib/insertSMARTRate.js csv/Block1.csv json/ma-merge-topo.json \
+    > json/ma-rates-topo.json
   ```
