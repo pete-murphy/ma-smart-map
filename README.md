@@ -41,9 +41,7 @@ I was hoping to have this all in a Makefile, but there are a number of things th
   ```
 2. Use [`geoproject`](https://github.com/d3/d3-geo-projection/blob/master/README.md#geoproject) (from `d3-geo-projection`) to project our map. According to [`d3-stateplane`](https://github.com/veltman/d3-stateplane#nad83--massachusetts-mainland-epsg26986) the optimal projection for Massachusetts mainland is `EPSG:26986`. I had some dependency issues trying to call this; `geoproject` is expected to be installed globally, and it required `resolve` to be installed globally as well. I don't know.
   ```bash
-  $ geoproject "d3.geoConicConformal() 
-    .parallels([41 + 43 / 60, 42 + 41 / 60]) 
-    .rotate([71 + 30 / 60, 0]).fitSize([960, 960], d)" \
+  $ geoproject "d3.geoConicConformal().parallels([41 + 43 / 60, 42 + 41 / 60]).rotate([71 + 30 / 60, 0]).fitSize([960, 960], d)" \
     < json/ma-towns-util.json > json/ma-projected.json
   ```
 3. Convert to TopoJSON. _**Note** that `towns` is required (hard-coded into `insertSMARTRate` script), need to fix that._
@@ -52,5 +50,5 @@ I was hoping to have this all in a Makefile, but there are a number of things th
   ```
 4. Now for the non-automated stuff. For the SMART rate data, there's no easy way of getting it; I just manually downloaded the Excel file, opened it in Numbers and exported a CSV of the section I cared about. I was then parsing that CSV using `d3.csvParse` and then scraping the relevant bits with vanilla JS `map` and `filter`. **And this is the ugly bit:** the Node script. It expects the CSV first followed by the TopoJSON. Not sure how brittle this is. **To do:** re-write in Haskell.
   ```bash
-  $ node lib/insertSMARTRate.js csv/Block1.csv json/ma-albers-topo.json
+  $ node lib/insertSMARTRate.js csv/Block1.csv json/ma-projected-topo.json
   ```
